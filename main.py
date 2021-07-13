@@ -20,6 +20,7 @@ client = slack.WebClient(token=os.environ['SLACK_TOKEN'])
 BOT_ID = client.api_call('auth.test')['user_id']
 
 intro_messages = {}
+full_feedback = []
 result = ''
 
 
@@ -79,11 +80,34 @@ def send_intro_message(channel, user):
 
 # TODO: save message that is sent for feedback into variable to be sent to api
 def save_user_message(user_message):
+    user_message_data = open('user_messages.txt', 'a')
+    user_message_data.write(user_message)
+    user_message_data.close()
+
+
+def get_api_feedback(user_message):
     global result
+    global full_feedback
     msg = user_message
     result = requests.put('https://6apsi3nlz8.execute-api.eu-west-2.amazonaws.com/prod/user_input', data={'data': msg})\
         .json()
-    print(json.dumps(result, indent=4, sort_keys=True))
+    json_string = json.dumps(result, indent=4, sort_keys=True)
+
+    # TODO: extract bot feedback from API response and send to user via slack bot
+    feedback = json.loads(json_string)
+    for i in feedback:
+        for key in feedback[i]:
+            if 'sentence' in key:
+                for a in feedback[i][key]['r_l']:
+                    full_feedback.append(a['r_str'])
+        return
+
+    #TODO: format 'full_feedback' before print, it is still in the list format
+    full_feedback_str = ' '.join([str(elem) for elem in full_feedback])
+    print(full_feedback_str)
+    # return full_feedback
+
+
 
 
 @slack_event_adapter.on('message')
@@ -96,10 +120,23 @@ def message(payload):
     # send intro message to user
     if text.lower() == 'intro':
         send_intro_message(f'@{user_id}', user_id)
-    elif save_user_message(text):
-        client.chat_postMessage(channel=channel_id, text=result)
+        #TODO: make sure only when the user types a message the bot responds, the bot should not respond to its own messages in this instance!!
+    elif BOT_ID != user_id:
+        save_user_message(text)
+        get_api_feedback(text)
+        client.chat_postMessage(channel=channel_id, text=full_feedback)
+    # else:
+    #     save_user_message(text)
+    #     get_api_feedback(text)
+    #     client.chat_postMessage(channel=channel_id, text=full_feedback)
 
     # TODO: save user message and user feedback to txt file before setting up db
+
+
+# TODO: start a thread under the message where bot sends the user feedback on their message, asking the user to give
+#  feedback on the bot's message
+
+
 
 
 if __name__ == "__main__":

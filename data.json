@@ -1,0 +1,164 @@
+{
+    "user_input": {
+        "c": [
+            "v_aI_o",
+            "s_neg",
+            "b_e",
+            "b_r",
+            "f_t",
+            "v_wo",
+            "s_neg"
+        ],
+        "c_s": [
+            0,
+            0,
+            1,
+            1,
+            2,
+            2,
+            2
+        ],
+        "cp": [],
+        "cp_s": [],
+        "end_response_str": "",
+        "message": "I hate you. You always do this to me. I feel you don\u2019t listen to me and ignore me.",
+        "sentence0": {
+            "phr": [
+                "hate",
+                "hate"
+            ],
+            "r_l": [
+                {
+                    "bad": 1,
+                    "c": "v_aI_o",
+                    "id": 0,
+                    "prompt_str": "OBSERVE",
+                    "r_i": [
+                        1
+                    ],
+                    "r_str": "'hate' seems to be describing your attitude towards someone. "
+                },
+                {
+                    "bad": 1,
+                    "c": "s_neg",
+                    "id": 1,
+                    "prompt_str": "OBSERVE",
+                    "r_i": [
+                        1
+                    ],
+                    "r_str": "'hate' may sound subjective and  negative."
+                }
+            ],
+            "s_str": "I hate you.",
+            "s_tok": [
+                "I",
+                "hate",
+                "you",
+                "."
+            ]
+        },
+        "sentence1": {
+            "phr": [
+                "always",
+                "do this to me"
+            ],
+            "r_l": [
+                {
+                    "bad": 1,
+                    "c": "b_e",
+                    "id": 2,
+                    "prompt_str": "OBSERVE",
+                    "r_i": [
+                        1
+                    ],
+                    "r_str": "Saying 'always' could sound like an exaggeration."
+                },
+                {
+                    "bad": 1,
+                    "c": "b_r",
+                    "id": 3,
+                    "prompt_str": "OBSERVE",
+                    "r_i": [
+                        2,
+                        3,
+                        4,
+                        5
+                    ],
+                    "r_str": "'do this to me' is not a nice phrase."
+                }
+            ],
+            "s_str": "You always do this to me.",
+            "s_tok": [
+                "You",
+                "always",
+                "do",
+                "this",
+                "to",
+                "me",
+                "."
+            ]
+        },
+        "sentence2": {
+            "phr": [
+                "ignore",
+                "n\u2019t listen"
+            ],
+            "r_l": [
+                {
+                    "bad": 1,
+                    "c": "f_t",
+                    "id": 4,
+                    "prompt_str": "THOUGHT_NOT_FEELING",
+                    "r_i": [
+                        2,
+                        3,
+                        4,
+                        5,
+                        6,
+                        7,
+                        8,
+                        9,
+                        10
+                    ],
+                    "r_str": "'you don\u2019t listen to me and ignore me' is a thought not a feeling."
+                },
+                {
+                    "bad": 1,
+                    "c": "v_wo",
+                    "id": 5,
+                    "prompt_str": "OBSERVE",
+                    "r_i": [
+                        9
+                    ],
+                    "r_str": "'ignore' may be an interpretation."
+                },
+                {
+                    "bad": 1,
+                    "c": "s_neg",
+                    "id": 6,
+                    "prompt_str": "OBSERVE",
+                    "r_i": [
+                        4,
+                        5
+                    ],
+                    "r_str": "'n\u2019t listen' may sound subjective and mildly negative."
+                }
+            ],
+            "s_str": "I feel you don\u2019t listen to me and ignore me.",
+            "s_tok": [
+                "I",
+                "feel",
+                "you",
+                "do",
+                "n\u2019t",
+                "listen",
+                "to",
+                "me",
+                "and",
+                "ignore",
+                "me",
+                "."
+            ]
+        }
+    }
+}
