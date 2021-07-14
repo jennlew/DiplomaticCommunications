@@ -1,5 +1,4 @@
 import json
-
 import slack
 import os
 from pathlib import Path
@@ -21,7 +20,7 @@ BOT_ID = client.api_call('auth.test')['user_id']
 
 intro_messages = {}
 full_feedback = []
-result = ''
+full_feedback_str = ''
 
 
 class IntroMessage:
@@ -86,7 +85,6 @@ def save_user_message(user_message):
 
 
 def get_api_feedback(user_message):
-    global result
     global full_feedback
     msg = user_message
     result = requests.put('https://6apsi3nlz8.execute-api.eu-west-2.amazonaws.com/prod/user_input', data={'data': msg})\
@@ -102,12 +100,18 @@ def get_api_feedback(user_message):
                     full_feedback.append(a['r_str'])
         return
 
-    #TODO: format 'full_feedback' before print, it is still in the list format
-    full_feedback_str = ' '.join([str(elem) for elem in full_feedback])
-    print(full_feedback_str)
-    # return full_feedback
+    # full_feedback_string(full_feedback)
+    return full_feedback
 
 
+# TODO: format 'full_feedback' before print, it is still in the list format
+def full_feedback_string(feedback):
+    global full_feedback_str
+    for elem in feedback:
+        full_feedback_str += elem
+        full_feedback_str += '\n'
+
+    return full_feedback_str
 
 
 @slack_event_adapter.on('message')
@@ -120,11 +124,13 @@ def message(payload):
     # send intro message to user
     if text.lower() == 'intro':
         send_intro_message(f'@{user_id}', user_id)
-        #TODO: make sure only when the user types a message the bot responds, the bot should not respond to its own messages in this instance!!
+        # TODO: make sure only when the user types a message the bot responds, the bot should not respond to its own
+        # messages in this instance!!
     elif BOT_ID != user_id:
         save_user_message(text)
         get_api_feedback(text)
-        client.chat_postMessage(channel=channel_id, text=full_feedback)
+        full_feedback_string(full_feedback)
+        client.chat_postMessage(channel=channel_id, text=full_feedback_str)
     # else:
     #     save_user_message(text)
     #     get_api_feedback(text)
