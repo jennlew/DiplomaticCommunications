@@ -3,10 +3,10 @@ import slack
 import os
 from pathlib import Path
 from dotenv import load_dotenv
-from flask import Flask, request, Response
+from flask import Flask
 import requests
 from slackeventsapi import SlackEventAdapter
-import string
+
 
 env_path = Path('.') / '.env'
 load_dotenv(dotenv_path=env_path)
@@ -77,10 +77,12 @@ def send_intro_message(channel, user):
     intro_messages[channel][user] = intro
 
 
+# TODO: save user message and user feedback to txt file before setting up db
 # TODO: save message that is sent for feedback into variable to be sent to api
 def save_user_message(user_message):
     user_message_data = open('user_messages.txt', 'a')
     user_message_data.write(user_message)
+    user_message_data.write('\n')
     user_message_data.close()
 
 
@@ -101,7 +103,6 @@ def get_api_feedback(user_message):
         return
 
     # full_feedback_string(full_feedback)
-    return full_feedback
 
 
 # TODO: format 'full_feedback' before print, it is still in the list format
@@ -111,7 +112,12 @@ def full_feedback_string(feedback):
         full_feedback_str += elem
         full_feedback_str += '\n'
 
-    return full_feedback_str
+
+def clear_feedback(feedback_list):
+    global full_feedback_str
+    feedback_list.clear()
+    feedback_str_clear = ''
+    full_feedback_str = feedback_str_clear
 
 
 @slack_event_adapter.on('message')
@@ -130,19 +136,13 @@ def message(payload):
         save_user_message(text)
         get_api_feedback(text)
         full_feedback_string(full_feedback)
-        client.chat_postMessage(channel=channel_id, text=full_feedback_str)
-    # else:
-    #     save_user_message(text)
-    #     get_api_feedback(text)
-    #     client.chat_postMessage(channel=channel_id, text=full_feedback)
-
-    # TODO: save user message and user feedback to txt file before setting up db
+        client.chat_postMessage(channel=user_id, text=full_feedback_str, icon_emoji=':robot_face:', username='Sempi')
+        clear_feedback(full_feedback)
+        # return
 
 
 # TODO: start a thread under the message where bot sends the user feedback on their message, asking the user to give
 #  feedback on the bot's message
-
-
 
 
 if __name__ == "__main__":
