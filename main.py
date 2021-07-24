@@ -3,7 +3,7 @@ import slack
 import os
 from pathlib import Path
 from dotenv import load_dotenv
-from flask import Flask
+from flask import Flask, request, Response
 import requests
 from slackeventsapi import SlackEventAdapter
 
@@ -17,6 +17,8 @@ slack_event_adapter = SlackEventAdapter(os.environ['SIGNING_SECRET'], '/slack/ev
 client = slack.WebClient(token=os.environ['SLACK_TOKEN'])
 
 BOT_ID = client.api_call('auth.test')['user_id']
+FEEDBACK_REQUEST = 'I want you to know I\'m not perfect, I\'m still learning too. Please help me improve by reacting ' \
+                   'to the feedback I gave using one of the following emojis: 👍 👎'
 
 intro_messages = {}
 full_feedback = []
@@ -56,7 +58,7 @@ class IntroMessage:
             'channel': self.channel,
             'blocks': [
                 self.START_TEXT,
-                self.DIVIDER,
+                self.DIVIDER
 
             ]
         }
@@ -102,8 +104,6 @@ def get_api_feedback(user_message):
                     full_feedback.append(a['r_str'])
         return
 
-    # full_feedback_string(full_feedback)
-
 
 # TODO: format 'full_feedback' before print, it is still in the list format
 def full_feedback_string(feedback):
@@ -120,6 +120,11 @@ def clear_feedback(feedback_list):
     full_feedback_str = feedback_str_clear
 
 
+# TODO: use reaction.get method to find out which emoji was used to react to the feedback
+def feedback_reaction():
+    return
+
+
 @slack_event_adapter.on('message')
 def message(payload):
     event = payload.get('event', {})
@@ -132,13 +137,32 @@ def message(payload):
         send_intro_message(f'@{user_id}', user_id)
         # TODO: make sure only when the user types a message the bot responds, the bot should not respond to its own
         # messages in this instance!!
-    elif BOT_ID != user_id:
+
+    elif user_id is not None and BOT_ID != user_id:
+        ts = event.get('ts')
         save_user_message(text)
         get_api_feedback(text)
         full_feedback_string(full_feedback)
-        client.chat_postMessage(channel=user_id, text=full_feedback_str, icon_emoji=':robot_face:', username='Sempi')
+        client.chat_postMessage(channel=user_id, thread_ts=ts, text=full_feedback_str)
+        client.chat_postMessage(channel=user_id, text=FEEDBACK_REQUEST, thread_ts=ts,)
         clear_feedback(full_feedback)
-        # return
+
+
+@app.route('/bot-feedback', methods=['POST'])
+def bot_feedback_slash():
+    data = request.form
+    user_id = data.get('user_id')
+    channel_id = data.get('channel_id')
+    text = data.get('text')
+    ts = data.get('ts')
+    
+    save_user_message(text)
+    get_api_feedback(text)
+    full_feedback_string(full_feedback)
+    client.chat_postMessage(channel=channel_id, thread_ts=ts, text=full_feedback_str)
+    client.chat_postMessage(channel=channel_id, text=FEEDBACK_REQUEST, thread_ts=ts, )
+    return Response(), 200
+
 
 
 # TODO: start a thread under the message where bot sends the user feedback on their message, asking the user to give
