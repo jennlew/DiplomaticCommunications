@@ -3,7 +3,7 @@ import slack
 import os
 from pathlib import Path
 from dotenv import load_dotenv
-from flask import Flask, request, Response
+from flask import Flask, request, Response, jsonify
 import requests
 from slackeventsapi import SlackEventAdapter
 
@@ -144,29 +144,28 @@ def message(payload):
         get_api_feedback(text)
         full_feedback_string(full_feedback)
         client.chat_postMessage(channel=user_id, thread_ts=ts, text=full_feedback_str)
-        client.chat_postMessage(channel=user_id, text=FEEDBACK_REQUEST, thread_ts=ts,)
+        client.chat_postMessage(channel=user_id, text=FEEDBACK_REQUEST, thread_ts=ts)
         clear_feedback(full_feedback)
+        reaction = client.reactions_get(channel=user_id, timestamp=ts)
+        print(reaction)
 
 
 @app.route('/bot-feedback', methods=['POST'])
 def bot_feedback_slash():
     data = request.form
-    user_id = data.get('user_id')
+    user_id = data.get('user')
     channel_id = data.get('channel_id')
     text = data.get('text')
     ts = data.get('ts')
-    
+
     save_user_message(text)
     get_api_feedback(text)
     full_feedback_string(full_feedback)
     client.chat_postMessage(channel=channel_id, thread_ts=ts, text=full_feedback_str)
-    client.chat_postMessage(channel=channel_id, text=FEEDBACK_REQUEST, thread_ts=ts, )
-    return Response(), 200
-
-
-
-# TODO: start a thread under the message where bot sends the user feedback on their message, asking the user to give
-#  feedback on the bot's message
+    client.chat_postMessage(channel=channel_id, text=FEEDBACK_REQUEST, thread_ts=ts)
+    clear_feedback(full_feedback)
+    return jsonify(response_type='ephemeral', text='Feedback sent')
+    # return Response(), 220
 
 
 if __name__ == "__main__":
