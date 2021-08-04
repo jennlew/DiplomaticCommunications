@@ -17,8 +17,8 @@ slack_event_adapter = SlackEventAdapter(os.environ['SIGNING_SECRET'], '/slack/ev
 client = slack.WebClient(token=os.environ['SLACK_TOKEN'])
 
 BOT_ID = client.api_call('auth.test')['user_id']
-FEEDBACK_REQUEST = 'I want you to know I\'m not perfect, I\'m still learning too. Please help me improve by reacting ' \
-                   'to the feedback I gave using one of the following emojis: 👍 👎'
+FEEDBACK_REQUEST = 'I want you to know I\'m not perfect, I\'m still learning too. Please help me improve by replying to' \
+                   'my message with your thoughts about my feedback!'
 
 intro_messages = {}
 full_feedback = []
@@ -36,6 +36,8 @@ class IntroMessage:
                 'become less likely to hear you and respond in a way you\'d like. I\'ll help you stick to objective '
                 'facts so you can convey your message more effectively. I\'ll also give suggestions for ways you can '
                 'make your message more powerful and clear. \n \n '
+                'To get feedback from me, use the \'/bot-feeback\' slash command followed by the message you want '
+                'feedback on. \n'
                 'How to exempt phrases from feedback: \n'
                 'If you want to exempt something from my feedback, you can write it in curly brackets. For example, '
                 'imagine you wrote, "He is elderly" and I give the feedback that "\'elderly\' seems to be a protected '
@@ -64,6 +66,7 @@ class IntroMessage:
         }
 
 
+# add decorator for on team join to send message when user joins the team
 def send_intro_message(channel, user):
     if channel not in intro_messages:
         intro_messages[channel] = {}
@@ -102,7 +105,7 @@ def get_api_feedback(user_message):
             if 'sentence' in key:
                 for a in feedback[i][key]['r_l']:
                     full_feedback.append(a['r_str'])
-        return
+        # print(full_feedback)
 
 
 # TODO: format 'full_feedback' before print, it is still in the list format
@@ -143,11 +146,11 @@ def message(payload):
         save_user_message(text)
         get_api_feedback(text)
         full_feedback_string(full_feedback)
-        client.chat_postMessage(channel=user_id, thread_ts=ts, text=full_feedback_str)
-        client.chat_postMessage(channel=user_id, text=FEEDBACK_REQUEST, thread_ts=ts)
+        client.chat_postMessage(channel=user_id, text=full_feedback_str)
+        client.chat_postMessage(channel=user_id, text=FEEDBACK_REQUEST)
         clear_feedback(full_feedback)
-        reaction = client.reactions_get(channel=user_id, timestamp=ts)
-        print(reaction)
+        # reaction = client.reactions_get(channel=user_id, timestamp=ts)
+        # print(reaction)
 
 
 @app.route('/bot-feedback', methods=['POST'])
@@ -166,6 +169,18 @@ def bot_feedback_slash():
     clear_feedback(full_feedback)
     return jsonify(response_type='ephemeral', text='Feedback sent')
     # return Response(), 220
+
+
+@app.route('/conversation-history', methods=['POST'])
+def convo_history_slash():
+    data = request.form
+    user_id = data.get('user')
+    channel_id = data.get('channel_id')
+    text = data.get('text')
+    ts = data.get('ts')
+
+    client.conversations_history(channel=channel_id, inclusive=True, lastest='now')
+    return
 
 
 if __name__ == "__main__":
