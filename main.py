@@ -17,7 +17,8 @@ slack_event_adapter = SlackEventAdapter(os.environ['SIGNING_SECRET'], '/slack/ev
 client = slack.WebClient(token=os.environ['SLACK_TOKEN'])
 
 BOT_ID = client.api_call('auth.test')['user_id']
-FEEDBACK_REQUEST = 'I want you to know I\'m not perfect, I\'m still learning too. Please help me improve by replying to' \
+FEEDBACK_REQUEST = 'I want you to know I\'m not perfect, I\'m still learning too. Please help me improve by reacting to ' \
+                   'the feedback I gave using one of the following emojis: :+1: :-1:  and replying to ' \
                    'my message with your thoughts about my feedback!'
 
 intro_messages = {}
@@ -66,7 +67,6 @@ class IntroMessage:
         }
 
 
-# add decorator for on team join to send message when user joins the team
 def send_intro_message(channel, user):
     if channel not in intro_messages:
         intro_messages[channel] = {}
@@ -128,6 +128,14 @@ def feedback_reaction():
     return
 
 
+@slack_event_adapter.on('team_join')
+def new_user_intro_message(payload):
+    event = payload.get('event', {})
+    user_id = event.get('user')
+
+    send_intro_message(f'@{user_id}', user_id)
+
+
 @slack_event_adapter.on('message')
 def message(payload):
     event = payload.get('event', {})
@@ -151,6 +159,26 @@ def message(payload):
         clear_feedback(full_feedback)
         # reaction = client.reactions_get(channel=user_id, timestamp=ts)
         # print(reaction)
+
+
+@slack_event_adapter.on('reaction_added')
+def feedback_reaction(payload):
+    event = payload.get('event', {})
+    user_id = event.get('user')
+    reaction = event.get('reaction')
+    type = event.get('item', {}).get('message')
+    item_user = event.get('item_user')
+
+    # check whether the message was sent by the bot
+    if item_user == BOT_ID and type == 'message':
+        if reaction == 'thumbsup':
+            # save to good column next to feedback message
+            print(reaction)
+        elif reaction == 'thumbsdown':
+            # save to bad column
+            print(reaction)
+        else:
+            print('different emoji')
 
 
 @app.route('/bot-feedback', methods=['POST'])
