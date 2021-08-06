@@ -5,4 +5,3 @@ requests~=2.25.1
 python-dotenv~=0.17.1
 slackeventsapi~=2.2.1
 slackclient==2.9.3
-python-decouple
