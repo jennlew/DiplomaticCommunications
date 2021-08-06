@@ -1,1 +1,1 @@
-web: gunicorn diplomaticcomms.wsgi
+web: gunicorn DiplomaticCommunications.wsgi
