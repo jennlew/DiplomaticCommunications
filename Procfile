@@ -1,1 +1,1 @@
-web: gunicorn diplomaticcomms.wsgi
+web: gunicorn main:app --log-file -
