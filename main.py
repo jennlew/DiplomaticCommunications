@@ -17,8 +17,8 @@ slack_event_adapter = SlackEventAdapter(os.environ['SLACK_SIGNING_SECRET'], '/sl
 client = slack.WebClient(token=os.environ['SLACK_TOKEN'])
 
 BOT_ID = client.api_call('auth.test')['user_id']
-FEEDBACK_REQUEST = 'I want you to know I\'m not perfect, I\'m still learning too. Please help me improve by reacting to ' \
-                   'the feedback I gave using one of the following emojis: :+1: :-1:  and replying to ' \
+FEEDBACK_REQUEST = 'I want you to know I\'m not perfect, I\'m still learning too. Please help me improve by reacting ' \
+                   'to the feedback I gave using one of the following emojis: :+1: :-1:  and replying to ' \
                    'my message with your thoughts about my feedback!'
 
 intro_messages = {}
@@ -33,18 +33,10 @@ class IntroMessage:
             'type': 'mrkdwn',
             'text': (
                 'Hi, I\'m Sempi.\n \n'
-                'I alert you to language that may sound judgmental or triggering. When people are triggered, they\'ll '
-                'become less likely to hear you and respond in a way you\'d like. I\'ll help you stick to objective '
-                'facts so you can convey your message more effectively. I\'ll also give suggestions for ways you can '
-                'make your message more powerful and clear. \n \n '
-                'To get feedback from me, use the \'/bot-feeback\' slash command followed by the message you want '
-                'feedback on. \n'
+                'I alert you to language that may sound judgmental or triggering. When people are triggered, they\'ll become less likely to hear you and respond in a way you\'d like. I\'ll help you stick to objective facts so you can convey your message more effectively. I\'ll also give suggestions for ways you can make your message more powerful and clear. \n \n '
+                'To get feedback from me, use the \'/bot-feeback\' slash command followed by the message you want feedback on. \n \n'
                 'How to exempt phrases from feedback: \n'
-                'If you want to exempt something from my feedback, you can write it in curly brackets. For example, '
-                'imagine you wrote, "He is elderly" and I give the feedback that "\'elderly\' seems to be a protected '
-                'characteristic." But perhaps use of the phrase "elderly" is appropriate for your context and you want '
-                'to exempt the phrase from my analysis. To exempt this phrase, you would write, "He is {elderly}." and '
-                'I will exempt everything inside the curly brackets from my comments.'
+                'If you want to exempt something from my feedback, you can write it in curly brackets. For example, imagine you wrote, "He is elderly" and I give the feedback that "\'elderly\' seems to be a protected characteristic." But perhaps use of the phrase "elderly" is appropriate for your context and you want to exempt the phrase from my analysis. To exempt this phrase, you would write, "He is {elderly}." and I will exempt everything inside the curly brackets from my comments.'
             )
         }
     }
@@ -195,7 +187,7 @@ def bot_feedback_slash():
     client.chat_postMessage(channel=channel_id, thread_ts=ts, text=full_feedback_str)
     client.chat_postMessage(channel=channel_id, text=FEEDBACK_REQUEST, thread_ts=ts)
     clear_feedback(full_feedback)
-    return jsonify(response_type='ephemeral', text='Feedback sent')
+    return jsonify(response_type='ephemeral', text=f'Feedback sent for message: \'{text}\'')
     # return Response(), 220
 
 
