@@ -195,7 +195,7 @@ def bot_feedback_slash():
     client.chat_postMessage(channel=channel_id, thread_ts=ts, text=full_feedback_str)
     client.chat_postMessage(channel=channel_id, text=FEEDBACK_REQUEST, thread_ts=ts)
     clear_feedback(full_feedback)
-    return jsonify(response_type='ephemeral', text='Feedback sent')
+    return jsonify(response_type='ephemeral', text=f'Feedback sent for message {text}')
     # return Response(), 220
 
 
