@@ -18,11 +18,11 @@ ENV = 'prod'
 # if running on the development environment use the local database and reload when changes are made to code
 if ENV == 'dev':
     # app.debug = True
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['POSTGRES_DEV_URL']
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('POSTGRES_DEV_URL')
 # if running on the production environment use the heroku database
 else:
     # app.debug = False
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
