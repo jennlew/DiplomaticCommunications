@@ -4,6 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 import json
 import slack
 import os
+import re
 from pathlib import Path
 import requests
 from slackeventsapi import SlackEventAdapter
@@ -13,7 +14,9 @@ app = Flask(__name__)
 env_path = Path('.') / '.env'
 load_dotenv(dotenv_path=env_path)
 ENV = 'prod'
-
+SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+if SQLALCHEMY_DATABASE_URI.startswith('postgres://'):
+    SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI.replace('postgres://', 'postgresql://', 1)
 
 # if running on the development environment use the local database and reload when changes are made to code
 if ENV == 'dev':
@@ -22,7 +25,7 @@ if ENV == 'dev':
 # if running on the production environment use the heroku database
 else:
     # app.debug = False
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL?sslmode=require').replace('postgres://', 'postgresql://')
+    app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
