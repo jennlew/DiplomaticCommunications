@@ -6,3 +6,4 @@ python-dotenv~=0.17.1
 slackeventsapi~=2.2.1
 slackclient==2.9.3
 psycopg2-binary==2.8.3
+flask-sqlalchemy==2.5.1

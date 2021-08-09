@@ -1,17 +1,43 @@
+from dotenv import load_dotenv
+from flask import Flask, request, Response, jsonify
+from flask_sqlalchemy import SQLAlchemy
 import json
 import slack
 import os
 from pathlib import Path
-from dotenv import load_dotenv
-from flask import Flask, request, Response, jsonify
 import requests
 from slackeventsapi import SlackEventAdapter
 
 
+app = Flask(__name__)
 env_path = Path('.') / '.env'
 load_dotenv(dotenv_path=env_path)
+ENV = 'prod'
 
-app = Flask(__name__)
+
+# if running on the development environment use the local database and reload when changes are made to code
+if ENV == 'dev':
+    # app.debug = True
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['POSTGRES_DEV_URL']
+# if running on the production environment use the heroku database
+else:
+    # app.debug = False
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'DATABASE_URL'
+
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
+
+
+class MessageFeedback(db.Model):
+    __tablename__ = 'message_and_feedback'
+    id = db.Column(db.Integer, primary_key=True)
+    user_message = db.Column(db.String(250))
+    bot_feedback = db.Column(db.String(250))
+
+    def __init__(self, user_message, bot_feedback):
+        self.user_message = user_message
+        self.bot_feedback = bot_feedback
+
 
 slack_event_adapter = SlackEventAdapter(os.environ['SLACK_SIGNING_SECRET'], '/slack/events', app)
 client = slack.WebClient(token=os.environ['SLACK_TOKEN'])
@@ -115,11 +141,6 @@ def clear_feedback(feedback_list):
     full_feedback_str = feedback_str_clear
 
 
-# TODO: use reaction.get method to find out which emoji was used to react to the feedback
-def feedback_reaction():
-    return
-
-
 @slack_event_adapter.on('team_join')
 def new_user_intro_message(payload):
     event = payload.get('event', {})
@@ -187,9 +208,10 @@ def bot_feedback_slash():
     client.chat_postMessage(channel=channel_id, thread_ts=ts, text=full_feedback_str)
     client.chat_postMessage(channel=channel_id, text=FEEDBACK_REQUEST, thread_ts=ts)
     clear_feedback(full_feedback)
-    bot_response = f'Feedback sent for message: {text}'
-    print(bot_response)
-    return jsonify(response_type='ephemeral', text=f'Feedback sent for message {text}')
+    db_data = MessageFeedback(user_message=text, bot_feedback=full_feedback_str)
+    db.session.add(db_data)
+    db.session.commit()
+    return jsonify(response_type='ephemeral', text=f'Feedback sent for message \'{text}\'')
     # return Response(), 220
 
 
