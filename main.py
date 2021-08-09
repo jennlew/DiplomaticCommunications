@@ -22,7 +22,7 @@ if ENV == 'dev':
 # if running on the production environment use the heroku database
 else:
     # app.debug = False
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'DATABASE_URL'
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
