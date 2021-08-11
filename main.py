@@ -189,7 +189,8 @@ def message(payload):
         client.chat_postMessage(channel=user_id, text=full_feedback_str)
         client.chat_postMessage(channel=user_id, text=FEEDBACK_REQUEST)
         clear_feedback(full_feedback)
-
+    if channel_id == user_id:
+        client.chat_postMessage(channel=user_id, text='a message was posted in this dm channel')
 
 # function to handle reaction events
 @slack_event_adapter.on('reaction_added')
@@ -248,5 +249,6 @@ def convo_history_slash():
     return
 
 
+# Run flask app on default port and update on save
 if __name__ == "__main__":
     app.run(debug=True)
