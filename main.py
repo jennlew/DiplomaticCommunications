@@ -179,7 +179,10 @@ def message(payload):
     # send intro message to user when they type intro (for demo purposes)
     if text.lower() == 'intro':
         send_intro_message(f'@{user_id}', user_id)
-
+        
+    if channel_id == user_id:
+        client.chat_postMessage(channel=user_id, text='a message was posted in this dm channel')
+        print('dm sent!!')
     # check the message did not come from the bot, then send feedback
     elif user_id is not None and BOT_ID != user_id:
         ts = event.get('ts')
@@ -189,9 +192,7 @@ def message(payload):
         client.chat_postMessage(channel=user_id, text=full_feedback_str)
         client.chat_postMessage(channel=user_id, text=FEEDBACK_REQUEST)
         clear_feedback(full_feedback)
-    if channel_id == user_id:
-        client.chat_postMessage(channel=user_id, text='a message was posted in this dm channel')
-        print('dm sent!!')
+
 
 # function to handle reaction events
 @slack_event_adapter.on('reaction_added')
