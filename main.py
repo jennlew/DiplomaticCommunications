@@ -191,6 +191,7 @@ def message(payload):
         clear_feedback(full_feedback)
     if channel_id == user_id:
         client.chat_postMessage(channel=user_id, text='a message was posted in this dm channel')
+        print('dm sent!!')
 
 # function to handle reaction events
 @slack_event_adapter.on('reaction_added')
