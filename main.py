@@ -1,5 +1,7 @@
+import random
+
 from dotenv import load_dotenv
-from flask import Flask, request, Response, jsonify
+from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 import json
 import slack
@@ -43,12 +45,14 @@ db = SQLAlchemy(app)
 class MessageFeedback(db.Model):
     __tablename__ = 'message_and_feedback'
     id = db.Column(db.Integer, primary_key=True)
-    user_message = db.Column(db.String(250))
-    bot_feedback = db.Column(db.String(250))
+    user_message = db.Column(db.String)
+    bot_feedback = db.Column(db.String)
+    feedback_ts = db.Column(db.Integer)
 
-    def __init__(self, user_message, bot_feedback):
+    def __init__(self, user_message, bot_feedback, feedback_ts):
         self.user_message = user_message
         self.bot_feedback = bot_feedback
+        self.feedback_ts = feedback_ts
 
 
 # add slackeventsadapter to handle events and endpoint for event requests
@@ -65,6 +69,13 @@ FEEDBACK_REQUEST = 'I want you to know I\'m not perfect, I\'m still learning too
 intro_messages = {}
 full_feedback = []
 full_feedback_str = ''
+bot_scenarios = ['Your colleague is not contributing enough on a join project you have, how would you tell them they '
+                 'need to help more?', 'Your manager does not listen to your suggestions and it is affecting your '
+                                       'morale, how would you approach this conversation?', 'Your employee did not '
+                                                                                            'complete a task '
+                                                                                            'properly, how would you '
+                                                                                            'approach a conversation '
+                                                                                            'about this?']
 
 
 # introduction message that bot sends to new users in channel
@@ -179,7 +190,7 @@ def message(payload):
     # send intro message to user when they type intro (for demo purposes)
     if text.lower() == 'intro':
         send_intro_message(f'@{user_id}', user_id)
-        
+
     if channel_id == user_id:
         client.chat_postMessage(channel=user_id, text='a message was posted in this dm channel')
         print('dm sent!!')
@@ -227,16 +238,27 @@ def bot_feedback_slash():
     save_user_message(text)
     get_api_feedback(text)
     full_feedback_string(full_feedback)
-    client.chat_postMessage(channel=channel_id, thread_ts=ts, text=full_feedback_str)
+    feedback_sent = client.chat_postMessage(channel=channel_id, thread_ts=ts, text=full_feedback_str)
     client.chat_postMessage(channel=channel_id, text=FEEDBACK_REQUEST, thread_ts=ts)
     clear_feedback(full_feedback)
 
     # save user message and bot feedback to database
-    db_data = MessageFeedback(user_message=text, bot_feedback=full_feedback_str)
+    db_data = MessageFeedback(user_message=text, bot_feedback=full_feedback_str, feedback_ts=feedback_sent['ts'])
     db.session.add(db_data)
     db.session.commit()
     return jsonify(response_type='ephemeral', text=f'Feedback sent for message \'{text}\'')
     # return Response(), 220
+
+
+@app.route('/scenarios', methods=['POST'])
+def scenarios():
+    data = request.form
+    channel_id = data.get('channel_id')
+
+    random_scenario = random.choice(bot_scenarios)
+    client.chat_postMessage(channel=channel_id, text=random_scenario)
+    return jsonify(response_type='ephemeral', text='Tell me how you would approach this scenario using the '
+                                                   'bot-feedback slash command')
 
 
 @app.route('/conversation-history', methods=['POST'])
@@ -247,8 +269,9 @@ def convo_history_slash():
     text = data.get('text')
     ts = data.get('ts')
 
-    client.conversations_history(channel=channel_id, inclusive=True, lastest='now')
-    return
+    convo = client.conversations_history(channel=channel_id, inclusive=True, latest='now')
+    print(convo)
+    return jsonify(response_type='ephemeral', text='Request received')
 
 
 # Run flask app on default port and update on save
