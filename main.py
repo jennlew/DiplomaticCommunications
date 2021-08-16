@@ -47,13 +47,13 @@ class MessageFeedback(db.Model):
     user_message = db.Column(db.String)
     bot_feedback = db.Column(db.String)
     feedback_ts = db.Column(db.Float)
-    rating = db.Column(db.String)
+    # rating = db.Column(db.String)
 
-    def __init__(self, user_message, bot_feedback, feedback_ts, rating):
+    def __init__(self, user_message, bot_feedback, feedback_ts):
         self.user_message = user_message
         self.bot_feedback = bot_feedback
         self.feedback_ts = feedback_ts
-        self.rating = rating
+        # self.rating = rating
 
 
 # add slackeventsadapter to handle events and endpoint for event requests
@@ -70,6 +70,8 @@ FEEDBACK_REQUEST = 'I want you to know I\'m not perfect, I\'m still learning too
 intro_messages = {}
 full_feedback = []
 full_feedback_str = ''
+msg_ts = 0
+fb_rating = ''
 bot_scenarios = ['Your colleague is not contributing enough on a join project you have, how would you tell them they '
                  'need to help more?', 'Your manager does not listen to your suggestions and it is affecting your '
                                        'morale, how would you approach this conversation?', 'Your employee did not '
@@ -210,22 +212,24 @@ def message(payload):
 # function to handle reaction events
 @slack_event_adapter.on('reaction_added')
 def feedback_reaction(payload):
+    global msg_ts
+    global fb_rating
     event = payload.get('event', {})
     user_id = event.get('user')
     reaction = event.get('reaction')
     type = event.get('item', {}).get('message')
     item_user = event.get('item_user')
+    msg_ts = event.get('item', {}).get('ts')
 
     # check whether the message was sent by the bot
-    if item_user == BOT_ID and type == 'message':
+    if item_user == BOT_ID:
         if reaction == 'thumbsup':
-            # save to good column next to feedback message
-            print(reaction)
+            fb_rating = 'good'
         elif reaction == 'thumbsdown':
-            # save to bad column
-            print(reaction)
+            fb_rating = 'bad'
         else:
             print('different emoji')
+    return fb_rating, msg_ts
 
 
 # detect whether bot-feedback slash command was used
