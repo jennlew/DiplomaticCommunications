@@ -288,10 +288,13 @@ def convo_history_slash():
     ts = data.get('ts')
 
     convo = client.conversations_history(channel=channel_id, inclusive=True)
-    db_data = ConvoHistory(conversation=convo)
-    db.session.add(db_data)
-    db.session.commit()
+    client.chat_postMessage(channel=user_id, text=convo)
+    # db_data = ConvoHistory(conversation=convo)
+    # db.session.add(db_data)
+    # db.session.commit()
     return jsonify(response_type='ephemeral', text='Request received')
+
+
 
 
 # Run flask app on default port and update on save
