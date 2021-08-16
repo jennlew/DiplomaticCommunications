@@ -1,13 +1,12 @@
+import json
+import os
 import random
-
+import requests
+import slack
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
-import json
-import slack
-import os
 from pathlib import Path
-import requests
 from slackeventsapi import SlackEventAdapter
 
 # configure Flask app
@@ -47,7 +46,7 @@ class MessageFeedback(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_message = db.Column(db.String)
     bot_feedback = db.Column(db.String)
-    feedback_ts = db.Column(db.Integer)
+    feedback_ts = db.Column(db.Float)
 
     def __init__(self, user_message, bot_feedback, feedback_ts):
         self.user_message = user_message
@@ -129,9 +128,9 @@ def send_intro_message(channel, user):
 
 
 # save user message to txt file
-def save_user_message(user_message):
+def save_messages(user_message, bot_feedback):
     user_message_data = open('user_messages.txt', 'a')
-    user_message_data.write(user_message)
+    user_message_data.write(f'{user_message} | {bot_feedback}')
     user_message_data.write('\n')
     user_message_data.close()
 
@@ -235,12 +234,12 @@ def bot_feedback_slash():
     text = data.get('text')
     ts = data.get('ts')
 
-    save_user_message(text)
     get_api_feedback(text)
     full_feedback_string(full_feedback)
+    save_messages(text, full_feedback_str)
     feedback_sent = client.chat_postMessage(channel=channel_id, thread_ts=ts, text=full_feedback_str)
     client.chat_postMessage(channel=channel_id, text=FEEDBACK_REQUEST, thread_ts=ts)
-    
+
     # save user message and bot feedback to database
     db_data = MessageFeedback(user_message=text, bot_feedback=full_feedback, feedback_ts=feedback_sent['ts'])
     db.session.add(db_data)
