@@ -156,6 +156,7 @@ def get_api_feedback(user_message):
 
     # extract bot feedback from API json response
     feedback = json.loads(json_string)
+    print(feedback)
     for i in feedback:
         for key in feedback[i]:
             if 'sentence' in key:
