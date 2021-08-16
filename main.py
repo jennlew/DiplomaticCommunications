@@ -47,11 +47,13 @@ class MessageFeedback(db.Model):
     user_message = db.Column(db.String)
     bot_feedback = db.Column(db.String)
     feedback_ts = db.Column(db.Float)
+    rating = db.Column(db.String)
 
-    def __init__(self, user_message, bot_feedback, feedback_ts):
+    def __init__(self, user_message, bot_feedback, feedback_ts, rating):
         self.user_message = user_message
         self.bot_feedback = bot_feedback
         self.feedback_ts = feedback_ts
+        self.rating = rating
 
 
 # add slackeventsadapter to handle events and endpoint for event requests
@@ -86,7 +88,8 @@ class IntroMessage:
             'text': (
                 'Hi, I\'m Sempi.\n \n'
                 'I alert you to language that may sound judgmental or triggering. When people are triggered, they\'ll become less likely to hear you and respond in a way you\'d like. I\'ll help you stick to objective facts so you can convey your message more effectively. I\'ll also give suggestions for ways you can make your message more powerful and clear. \n \n '
-                'To get feedback from me, use the \'/bot-feedback\' slash command followed by the message you want feedback on. \n \n'
+                'To get feedback from me, use the \'/bot-feedback\' slash command followed by the message you want feedback on in the DM where you received this intro message. \n '
+                'To practice your communication skills, use the \'/scenarios\' slash command to react to different workplace scenarios. \n \n'
                 'How to exempt phrases from feedback: \n'
                 'If you want to exempt something from my feedback, you can write it in curly brackets. For example, imagine you wrote, "He is elderly" and I give the feedback that "\'elderly\' seems to be a protected characteristic." But perhaps use of the phrase "elderly" is appropriate for your context and you want to exempt the phrase from my analysis. To exempt this phrase, you would write, "He is {elderly}." and I will exempt everything inside the curly brackets from my comments.'
             )
@@ -196,9 +199,9 @@ def message(payload):
     # check the message did not come from the bot, then send feedback
     elif user_id is not None and BOT_ID != user_id:
         ts = event.get('ts')
-        save_user_message(text)
         get_api_feedback(text)
         full_feedback_string(full_feedback)
+        save_messages(text, full_feedback_str)
         client.chat_postMessage(channel=user_id, text=full_feedback_str)
         client.chat_postMessage(channel=user_id, text=FEEDBACK_REQUEST)
         clear_feedback(full_feedback)
@@ -246,7 +249,6 @@ def bot_feedback_slash():
     db.session.commit()
     clear_feedback(full_feedback)
     return jsonify(response_type='ephemeral', text=f'Feedback sent for message \'{text}\'')
-    # return Response(), 220
 
 
 @app.route('/scenarios', methods=['POST'])
