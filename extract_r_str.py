@@ -31,7 +31,7 @@ def full_feedback_string(feedback):
     print(full_feedback_str)
 
 
-get_api_feedback("I hate you. You always do this to me. I feel you don’t listen to me and ignore me")
+get_api_feedback("The assignment I have been given is too hard, I don’t know how to complete it")
 full_feedback_string(full_feedback)
 
 
