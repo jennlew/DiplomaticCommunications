@@ -240,12 +240,12 @@ def bot_feedback_slash():
     full_feedback_string(full_feedback)
     feedback_sent = client.chat_postMessage(channel=channel_id, thread_ts=ts, text=full_feedback_str)
     client.chat_postMessage(channel=channel_id, text=FEEDBACK_REQUEST, thread_ts=ts)
-    clear_feedback(full_feedback)
-
+    
     # save user message and bot feedback to database
-    db_data = MessageFeedback(user_message=text, bot_feedback=full_feedback_str, feedback_ts=feedback_sent['ts'])
+    db_data = MessageFeedback(user_message=text, bot_feedback=full_feedback, feedback_ts=feedback_sent['ts'])
     db.session.add(db_data)
     db.session.commit()
+    clear_feedback(full_feedback)
     return jsonify(response_type='ephemeral', text=f'Feedback sent for message \'{text}\'')
     # return Response(), 220
 
