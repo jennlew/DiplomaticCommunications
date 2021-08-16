@@ -42,7 +42,7 @@ db = SQLAlchemy(app)
 
 # create database table
 class MessageFeedback(db.Model):
-    __tablename__ = 'message_and_feedback'
+    __tablename__ = 'message_feedback'
     id = db.Column(db.Integer, primary_key=True)
     user_message = db.Column(db.String)
     bot_feedback = db.Column(db.String)
