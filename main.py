@@ -76,6 +76,7 @@ FEEDBACK_REQUEST = 'I want you to know I\'m not perfect, I\'m still learning too
 intro_messages = {}
 full_feedback = []
 full_feedback_str = ''
+db_feedback_str = ''
 msg_ts = 0
 fb_rating = ''
 bot_scenarios = ['Your colleague is not contributing enough on a join project you have, how would you tell them they '
@@ -169,9 +170,12 @@ def get_api_feedback(user_message):
 # format feedback before sending - change from list to string
 def full_feedback_string(feedback):
     global full_feedback_str
+    global db_feedback_str
     for elem in feedback:
         full_feedback_str += elem
         full_feedback_str += '\n'
+        db_feedback_str += elem
+        db_feedback_str += ' '
 
 
 # clear feedback list
@@ -257,7 +261,7 @@ def bot_feedback_slash():
     client.chat_postMessage(channel=channel_id, text=FEEDBACK_REQUEST, thread_ts=ts)
 
     # save user message and bot feedback to database
-    db_data = MessageFeedback(user_message=text, bot_feedback=full_feedback, feedback_ts=feedback_sent['ts'])
+    db_data = MessageFeedback(user_message=text, bot_feedback=db_feedback_str, feedback_ts=feedback_sent['ts'])
     db.session.add(db_data)
     db.session.commit()
     clear_feedback(full_feedback)
