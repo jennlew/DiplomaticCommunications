@@ -56,6 +56,12 @@ class MessageFeedback(db.Model):
         # self.rating = rating
 
 
+class ConvoHistory(db.Model):
+    __tablename__ = 'conversation_history'
+    id = db.Column(db.Integer, primary_key=True)
+    conversation = db.Column(db.String)
+
+
 # add slackeventsadapter to handle events and endpoint for event requests
 slack_event_adapter = SlackEventAdapter(os.environ['SLACK_SIGNING_SECRET'], '/slack/events', app)
 # create webclient with slack token
@@ -275,8 +281,9 @@ def convo_history_slash():
     ts = data.get('ts')
 
     convo = client.conversations_history(channel=channel_id, inclusive=True)
-    client.chat_postMessage(channel=user_id, text=convo)
-    print(convo)
+    db_data = ConvoHistory(conversation=convo)
+    db.session.add(db_data)
+    db.session.commit()
     return jsonify(response_type='ephemeral', text='Request received')
 
 
