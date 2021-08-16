@@ -270,6 +270,7 @@ def convo_history_slash():
     ts = data.get('ts')
 
     convo = client.conversations_history(channel=channel_id, inclusive=True)
+    client.chat_postMessage(channel=user_id, text=convo)
     print(convo)
     return jsonify(response_type='ephemeral', text='Request received')
 
