@@ -156,14 +156,14 @@ def get_api_feedback(user_message):
 
     # extract bot feedback from API json response
     feedback = json.loads(json_string)
-    if feedback == '':
+
+    for i in feedback:
+        for key in feedback[i]:
+            if 'sentence' in key:
+                for a in feedback[i][key]['r_l']:
+                    full_feedback.append(a['r_str'])
+    if not full_feedback:
         full_feedback.append('The message was not deemed as negative')
-    else:
-        for i in feedback:
-            for key in feedback[i]:
-                if 'sentence' in key:
-                    for a in feedback[i][key]['r_l']:
-                        full_feedback.append(a['r_str'])
 
 
 # format feedback before sending - change from list to string

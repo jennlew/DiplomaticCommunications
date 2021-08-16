@@ -15,6 +15,7 @@ def get_api_feedback(user_message):
 
     # TODO: extract bot feedback from API response and send to user via slack bot
     feedback = json.loads(json_string)
+    print(feedback)
     for i in feedback:
         for key in feedback[i]:
             if 'sentence' in key:
