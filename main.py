@@ -297,6 +297,7 @@ def user_feedback():
     db_data = FeedbackRating(user_id=user_id, user_fb=text, ts=ts)
     db.session.add(db_data)
     db.session.commit()
+    return jsonify(response_type='ephemeral', text='Thank you! Feedback received')
 
 
 @app.route('/scenarios', methods=['POST'])
