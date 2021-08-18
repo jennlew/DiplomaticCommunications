@@ -61,6 +61,22 @@ class ConvoHistory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     conversation = db.Column(db.String)
 
+    def __init__(self, coversation):
+        self.conversation = coversation
+
+
+class FeedbackRating(db.Model):
+    __tablename__ = "feedback_rating"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.String)
+    user_feedback = db.Column(db.String)
+    ts = db.Column(db.Float)
+
+    def __init__(self, user_id, user_fb, ts):
+        self.user_id = user_id
+        self.user_feedback = user_fb
+        self.ts = ts
+
 
 # add slackeventsadapter to handle events and endpoint for event requests
 slack_event_adapter = SlackEventAdapter(os.environ['SLACK_SIGNING_SECRET'], '/slack/events', app)
@@ -208,9 +224,9 @@ def message(payload):
     if text.lower() == 'intro':
         send_intro_message(f'@{user_id}', user_id)
 
-    if channel_id == user_id:
-        client.chat_postMessage(channel=user_id, text='a message was posted in this dm channel')
-        print('dm sent!!')
+    # if channel_id == user_id:
+    #     client.chat_postMessage(channel=user_id, text='a message was posted in this dm channel')
+    #     print('dm sent!!')
     # check the message did not come from the bot, then send feedback
     elif user_id is not None and BOT_ID != user_id:
         ts = event.get('ts')
@@ -267,6 +283,18 @@ def bot_feedback_slash():
     return jsonify(response_type='ephemeral', text=f'Feedback sent for message \'{text}\'')
 
 
+@slack_event_adapter.on('conversation_replies')
+def user_feedback(payload):
+    event = payload.get('event', {})
+    user_id = event.get('messages', {}).get('user')
+    text = event.get('messages', {}).get('text')
+    thread_ts = event.get('messages', {}).get('thread_ts')
+
+    db_data = FeedbackRating(user_id=user_id, user_fb=text, ts=thread_ts)
+    db.session.add(db_data)
+    db.session.commit()
+
+
 @app.route('/scenarios', methods=['POST'])
 def scenarios():
     data = request.form
@@ -283,8 +311,8 @@ def convo_history_slash():
     data = request.form
     user_id = data.get('user')
     channel_id = data.get('channel_id')
-    text = data.get('text')
-    ts = data.get('ts')
+    # text = data.get('text')
+    # ts = data.get('ts')
 
     convo = client.conversations_history(channel=channel_id, inclusive=True)
     client.chat_postMessage(channel=user_id, text=convo)
@@ -292,8 +320,6 @@ def convo_history_slash():
     # db.session.add(db_data)
     # db.session.commit()
     return jsonify(response_type='ephemeral', text='Request received')
-
-
 
 
 # Run flask app on default port and update on save
