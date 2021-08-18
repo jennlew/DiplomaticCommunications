@@ -210,6 +210,10 @@ def new_user_intro_message(payload):
 
     # send the intro message when a new member joins the team
     send_intro_message(f'@{user_id}', user_id)
+    intro = IntroMessage(user_id, user_id)
+    first_message = intro.get_message()
+    response = client.chat_postMessage(**first_message)
+    intro.timestamp = response['ts']
 
 
 # function to handle message events
@@ -315,6 +319,7 @@ def convo_history_slash():
     # ts = data.get('ts')
 
     convo = client.conversations_history(channel=channel_id, inclusive=True)
+    convo = jsonify(convo)
     client.chat_postMessage(channel=user_id, text=convo)
     # db_data = ConvoHistory(conversation=convo)
     # db.session.add(db_data)
