@@ -139,7 +139,7 @@ def send_intro_message(channel, user):
     intro_messages[channel][user] = intro
 
 
-# save user message to txt file
+# save user message to txt file - used before database was set up
 def save_messages(user_message, bot_feedback):
     user_message_data = open('user_messages.txt', 'a')
     user_message_data.write(f'{user_message} | {bot_feedback}')
@@ -164,7 +164,7 @@ def get_api_feedback(user_message):
                 for a in feedback[i][key]['r_l']:
                     full_feedback.append(a['r_str'])
     if not full_feedback:
-        full_feedback.append('The message was not deemed as negative')
+        full_feedback.append('The message was not deemed as negative but remember there are always ways to improve!')
 
 
 # format feedback before sending - change from list to string
@@ -228,16 +228,16 @@ def feedback_reaction(payload):
     global msg_ts
     global fb_rating
     event = payload.get('event', {})
-    user_id = event.get('user')
     reaction = event.get('reaction')
-    type = event.get('item', {}).get('message')
     item_user = event.get('item_user')
+    channel_id = event.get('item', {}).get('channel')
     msg_ts = event.get('item', {}).get('ts')
 
     # check whether the message was sent by the bot
     if item_user == BOT_ID:
         if reaction == 'thumbsup':
             fb_rating = 'good'
+            client.chat_postMessage(channel=channel_id, text=fb_rating)
         elif reaction == 'thumbsdown':
             fb_rating = 'bad'
         else:
@@ -249,7 +249,6 @@ def feedback_reaction(payload):
 @app.route('/bot-feedback', methods=['POST'])
 def bot_feedback_slash():
     data = request.form
-    user_id = data.get('user')
     channel_id = data.get('channel_id')
     text = data.get('text')
     ts = data.get('ts')
