@@ -287,14 +287,14 @@ def bot_feedback_slash():
     return jsonify(response_type='ephemeral', text=f'Feedback sent for message \'{text}\'')
 
 
-@slack_event_adapter.on('conversation_replies')
-def user_feedback(payload):
-    event = payload.get('event', {})
-    user_id = event.get('messages', {}).get('user')
-    text = event.get('messages', {}).get('text')
-    thread_ts = event.get('messages', {}).get('thread_ts')
+@app.route('/feedback-rating', methods=['POST'])
+def user_feedback():
+    data = request.form
+    text = data.get('text')
+    ts = data.get('ts')
+    user_id = data.get('user')
 
-    db_data = FeedbackRating(user_id=user_id, user_fb=text, ts=thread_ts)
+    db_data = FeedbackRating(user_id=user_id, user_fb=text, ts=ts)
     db.session.add(db_data)
     db.session.commit()
 
