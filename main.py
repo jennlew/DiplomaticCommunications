@@ -1,3 +1,6 @@
+# source used for postgres database set up: https://www.youtube.com/watch?v=w25ea_I89iM&ab_channel=TraversyMedia
+# source used for slack bot development: https://slack.dev/python-slack-sdk/
+
 import json
 import os
 import random
@@ -32,7 +35,7 @@ if ENV == 'dev':
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('POSTGRES_DEV_URL')
 # if running on the production environment use the heroku database
 else:
-    # app.debug = False
+    app.debug = False
     app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
 
 # configure database
@@ -86,8 +89,8 @@ client = slack.WebClient(token=os.environ['SLACK_TOKEN'])
 # return ID of the bot
 BOT_ID = client.api_call('auth.test')['user_id']
 FEEDBACK_REQUEST = 'I want you to know I\'m not perfect, I\'m still learning too. Please help me improve by reacting ' \
-                   'to the feedback I gave using one of the following emojis: :+1: :-1:  and replying to ' \
-                   'my message with your thoughts about my feedback!'
+                   'to the feedback I gave using one of the following emojis: :+1: :-1:  and using the slash command ' \
+                   '\'/feedback-rating\' to send me your thoughts about my feedback!'
 
 intro_messages = {}
 full_feedback = []
@@ -243,26 +246,26 @@ def message(payload):
 
 
 # function to handle reaction events
-@slack_event_adapter.on('reaction_added')
-def feedback_reaction(payload):
-    global msg_ts
-    global fb_rating
-    event = payload.get('event', {})
-    reaction = event.get('reaction')
-    item_user = event.get('item_user')
-    channel_id = event.get('item', {}).get('channel')
-    msg_ts = event.get('item', {}).get('ts')
-
-    # check whether the message was sent by the bot
-    if item_user == BOT_ID:
-        if reaction == 'thumbsup':
-            fb_rating = 'good'
-            client.chat_postMessage(channel=channel_id, text=fb_rating)
-        elif reaction == 'thumbsdown':
-            fb_rating = 'bad'
-        else:
-            print('different emoji')
-    return fb_rating, msg_ts
+# @slack_event_adapter.on('reaction_added')
+# def feedback_reaction(payload):
+#     global msg_ts
+#     global fb_rating
+#     event = payload.get('event', {})
+#     reaction = event.get('reaction')
+#     item_user = event.get('item_user')
+#     channel_id = event.get('item', {}).get('channel')
+#     msg_ts = event.get('item', {}).get('ts')
+#
+#     # check whether the message was sent by the bot
+#     if item_user == BOT_ID:
+#         if reaction == 'thumbsup':
+#             fb_rating = 'good'
+#             client.chat_postMessage(channel=channel_id, text=fb_rating)
+#         elif reaction == 'thumbsdown':
+#             fb_rating = 'bad'
+#         else:
+#             print('different emoji')
+#     return fb_rating, msg_ts
 
 
 # detect whether bot-feedback slash command was used
@@ -330,4 +333,4 @@ def convo_history_slash():
 
 # Run flask app on default port and update on save
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
