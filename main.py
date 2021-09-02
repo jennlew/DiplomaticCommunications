@@ -245,29 +245,6 @@ def message(payload):
         clear_feedback(full_feedback)
 
 
-# function to handle reaction events
-# @slack_event_adapter.on('reaction_added')
-# def feedback_reaction(payload):
-#     global msg_ts
-#     global fb_rating
-#     event = payload.get('event', {})
-#     reaction = event.get('reaction')
-#     item_user = event.get('item_user')
-#     channel_id = event.get('item', {}).get('channel')
-#     msg_ts = event.get('item', {}).get('ts')
-#
-#     # check whether the message was sent by the bot
-#     if item_user == BOT_ID:
-#         if reaction == 'thumbsup':
-#             fb_rating = 'good'
-#             client.chat_postMessage(channel=channel_id, text=fb_rating)
-#         elif reaction == 'thumbsdown':
-#             fb_rating = 'bad'
-#         else:
-#             print('different emoji')
-#     return fb_rating, msg_ts
-
-
 # detect whether bot-feedback slash command was used
 @app.route('/bot-feedback', methods=['POST'])
 def bot_feedback_slash():
@@ -334,3 +311,25 @@ def convo_history_slash():
 # Run flask app on default port and update on save
 if __name__ == "__main__":
     app.run()
+
+# function to handle reaction events
+# @slack_event_adapter.on('reaction_added')
+# def feedback_reaction(payload):
+#     global msg_ts
+#     global fb_rating
+#     event = payload.get('event', {})
+#     reaction = event.get('reaction')
+#     item_user = event.get('item_user')
+#     channel_id = event.get('item', {}).get('channel')
+#     msg_ts = event.get('item', {}).get('ts')
+#
+#     # check whether the message was sent by the bot
+#     if item_user == BOT_ID:
+#         if reaction == 'thumbsup':
+#             fb_rating = 'good'
+#             client.chat_postMessage(channel=channel_id, text=fb_rating)
+#         elif reaction == 'thumbsdown':
+#             fb_rating = 'bad'
+#         else:
+#             print('different emoji')
+#     return fb_rating, msg_ts
